@@ -1,0 +1,107 @@
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from rest_framework import serializers
+from accounts.models import User
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth.models import Group
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'email', 'phone_number', 'date_joined', 'region']
+
+
+class RegisterSerializer(serializers.ModelSerializer):
+    re_password = serializers.CharField(write_only=True, max_length=255)
+    password = serializers.CharField(write_only=True, max_length=255)
+    role = serializers.CharField(max_length=20)
+    class Meta:
+        model = User
+        fields = ['email', 'phone_number', 'first_name', 'last_name', 'password', 're_password', 'region', 'role']
+
+    def validate(self, attrs):
+        if str(attrs['password']) != str(attrs['re_password']):
+            raise serializers.ValidationError("Passwords don\'t match")
+
+        email = attrs.get('email', None)
+        phone_number = attrs.get('phone_number', None)
+
+        if not email and not phone_number:
+            raise serializers.ValidationError("No email and phone number provided.")
+
+        return attrs
+
+    def create(self, validated_data):
+        validated_data.pop('re_password')
+        password = validated_data.pop('password')
+        role = validated_data.pop("role", None)
+
+        user = User.objects.create_user(**validated_data)
+        user.set_password(password)
+        user.save()
+        if role and role == 'Farmers':
+            user_group, _ = Group.objects.get_or_create(name='Farmers')
+            user.groups.add(user_group)
+        if role and role == 'Exporters':
+            user_group, _ = Group.objects.get_or_create(name='Exporters')
+            user.groups.add(user_group)
+        if role and role == 'Analysts':
+            user_group, _ = Group.objects.get_or_create(name='Analysts')
+            user.groups.add(user_group)
+
+        return user
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    username_field = 'login_field'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['login_field'] = serializers.CharField()
+        self.fields.pop('email', None)  # Remove email field if it exists
+
+    def validate(self, attrs):
+        login_field = attrs.get('login_field')
+        password = attrs.get('password')
+
+        if not login_field or not password:
+            raise serializers.ValidationError('Must include login field and password')
+
+        # Determine if login_field is email or phone number
+        try:
+            validate_email(login_field)
+            is_email = True
+        except ValidationError:
+            is_email = False
+
+        if is_email:
+            email_to_authenticate = login_field
+        else:
+            try:
+                user_db = User.objects.get(phone_number=login_field)
+                email_to_authenticate = user_db.email
+            except User.DoesNotExist:
+                raise serializers.ValidationError("Invalid credentials")
+
+        # Authenticate user
+        user = authenticate(
+            request=self.context.get('request'),
+            username=email_to_authenticate,
+            password=password
+        )
+
+        if not user:
+            raise serializers.ValidationError("Invalid credentials")
+
+        if not user.is_active:
+            raise serializers.ValidationError("User account is not active")
+
+        # Generate tokens
+        refresh = self.get_token(user)
+
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'user': UserSerializer(user).data
+        }
