@@ -1,6 +1,9 @@
+from datetime import timedelta
+
 from django.core.validators import RegexValidator
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.utils import timezone
 
 
 class CustomUserManager(BaseUserManager):
@@ -33,6 +36,7 @@ class User(AbstractUser):
         blank=True
     )
     region = models.CharField(max_length=255, null=True, blank=True)
+    google_id = models.CharField(max_length=50, unique=True, null=True, blank=True)
 
 
     USERNAME_FIELD = 'email'
@@ -42,3 +46,69 @@ class User(AbstractUser):
 
     class Meta:
         db_table = 'Users'
+
+
+def default_expire_date():
+    return timezone.now() + timedelta(minutes=1)
+
+class CodePassword(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="User")
+    code = models.CharField(max_length=10)
+    expire_date = models.DateTimeField(default=default_expire_date)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Password Code"
+        verbose_name_plural = "Password Codes"
+        db_table = "CodePassword"
+
+    def save(self, *args, **kwargs):
+        CodePassword.objects.filter(user=self.user).delete()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Code: {self.code} for {self.user.email} (Expires: {self.expire_date})"
+
+class CodeEmail(models.Model):
+    code = models.CharField(max_length=10)
+    email = models.EmailField(max_length=200)
+    expire_date = models.DateTimeField(default=default_expire_date)
+
+    class Meta:
+        verbose_name = "Email Code"
+        verbose_name_plural = "Email Codes"
+        db_table = "CodeEmail"
+
+    def save(self, *args, **kwargs):
+        CodeEmail.objects.filter(email=self.email).delete()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Code: {self.code} for {self.email} (Expires: {self.expire_date})"
+
+
+class TemporaryUser(models.Model):
+    first_name = models.CharField(max_length=150)
+    last_name = models.CharField(max_length=150, null=True, blank=True)
+    email = models.EmailField(unique=True, null=True, blank=True)
+    phone_number = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    region = models.CharField(max_length=255)
+    date_joined = models.DateTimeField(default=timezone.now)
+    role = models.CharField(max_length=50)
+    password = models.CharField(max_length=255)
+    re_password = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.first_name} - {self.email}"
+
+    class Meta:
+        db_table = "TemporaryUser"
+
+# class TempEmailStorage(models.Model):
+#     email = models.EmailField()
+#     created_at = models.DateTimeField(auto_now_add=True)
+#
+#     def save(self, *args, **kwargs):
+#         TempEmailStorage.objects.filter(email=self.email).delete()
+#         super().save(*args, **kwargs)
+
