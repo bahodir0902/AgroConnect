@@ -1,7 +1,6 @@
 import requests
 from decouple import config
 from django.shortcuts import redirect
-from django.views import View
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from accounts.serializers import *

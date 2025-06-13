@@ -14,6 +14,8 @@ from datetime import timedelta
 from pathlib import Path
 from decouple import config
 
+REDIS_HOST = config("REDIS_HOST", default="127.0.0.1")
+REDIS_PORT = config("REDIS_PORT", default=6379)
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -49,7 +51,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-
+    'django_celery_beat'
 ]
 
 
@@ -221,3 +223,10 @@ GOOGLE_REDIRECT_URI = config('GOOGLE_REDIRECT_URI')
 GOOGLE_AUTH_URL = config('GOOGLE_AUTH_URL')
 GOOGLE_TOKEN_URL = config('GOOGLE_TOKEN_URL')
 GOOGLE_USER_INFO_URL = config('GOOGLE_USER_INFO_URL')
+
+CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
+CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 1800
+CELERY_TIMEZONE = config("TIMEZONE", default="UTC")
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers.DatabaseScheduler"
