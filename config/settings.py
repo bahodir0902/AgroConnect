@@ -19,7 +19,6 @@ REDIS_PORT = config("REDIS_PORT", default=6379)
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -31,7 +30,6 @@ DEBUG = config("DEBUG")
 
 ALLOWED_HOSTS = ['*']
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -42,10 +40,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    #local
+    # local
     'accounts',
 
-    #3rd party
+    # 3rd party
     'corsheaders',
     'rest_framework',
     'drf_yasg',
@@ -53,7 +51,6 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'django_celery_beat'
 ]
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -66,15 +63,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ALLOWED_ORIGINS = ['*']
+CORS_ALLOWED_ORIGINS = ['http://34.34.87.78']
 CORS_ALLOW_ALL_ORIGINS = True
 
-CSRF_TRUSTED_ORIGINS = ['*']
+CSRF_TRUSTED_ORIGINS = ['http://34.34.87.78']
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ORIGIN_WHITELIST = ['*']
-
-
 
 ROOT_URLCONF = 'config.urls'
 
@@ -95,7 +90,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
-
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -129,7 +123,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
@@ -140,7 +133,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
@@ -154,7 +146,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'accounts.User'
-
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -203,7 +194,6 @@ EMAIL_PORT = config('EMAIL_PORT', default=587)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='email@example.com')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='password')
-
 
 GOOGLE_CLIENT_ID = config("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = config('GOOGLE_CLIENT_SECRET')
