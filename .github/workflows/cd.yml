@@ -38,15 +38,9 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             
-            sudo docker compose down --volumes --remove-orphans
-            sudo docker images --format "{{.Repository}} {{.ID}}" | grep 'agroconnect' | awk '{print $2}' | xargs -r sudo docker rmi
+            sudo docker compose -p agroconnect down --volumes --remove-orphans
+            sudo docker images --format '{{.Repository}} {{.ID}}' | awk '$1 ~ /^agroconnect/ {print $2}' | xargs -r sudo docker rmi
             sudo docker image prune -f
             sudo docker volume ls --format '{{.Name}}' | grep '^agroconnect' | xargs -r sudo docker volume rm
             sudo docker network ls --format '{{.Name}}' | grep '^agroconnect' | xargs -r sudo docker network rm
-            
-            sudo docker compose -p "$PROJECT" down --volumes --remove-orphans
-            sudo docker images --format '{{.Repository}} {{.ID}}' | awk -v prefix="$PROJECT" '$1 ~ "^"prefix {print $2}' | xargs -r sudo docker rmi
-            sudo docker volume ls --format '{{.Name}}' | grep "^${PROJECT}_" | xargs -r sudo docker volume rm
-            sudo docker network ls --format '{{.Name}}' | grep "^${PROJECT}_" | xargs -r sudo docker network rm
             sudo docker builder prune -af
-
