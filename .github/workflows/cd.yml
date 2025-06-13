@@ -44,3 +44,6 @@ jobs:
             sudo docker volume ls --format '{{.Name}}' | grep '^agroconnect' | xargs -r sudo docker volume rm
             sudo docker network ls --format '{{.Name}}' | grep '^agroconnect' | xargs -r sudo docker network rm
             sudo docker builder prune -af
+            
+            sudo docker compose build
+            sudo docker compose up -d
