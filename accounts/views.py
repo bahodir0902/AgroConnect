@@ -413,18 +413,26 @@ class GoogleCallBackView(APIView):
             }
         )
 
+        refresh = RefreshToken.for_user(user)
+        access = refresh.access_token
         if created:
             user.set_unusable_password()
             user.save()
-            return Response({"message": "Registration completed successfully", "email": email},
-                            status=status.HTTP_201_CREATED)
 
-        refresh = RefreshToken.for_user(user)
-        return Response({
-            "message": "Login completed successfully",
-            "user": UserSerializer(user).data,
-            "tokens": {
-                "refresh": str(refresh),
-                "access": str(refresh.access_token),
-            }
-        }, status=status.HTTP_201_CREATED)
+            frontend_url = config("FRONTEND_URL", default="http://localhost:8080")
+            redirect_url = f"{frontend_url}/register/complete-profile?access_token={str(access)}&refresh_token={str(refresh)}&email={email}&message=Registration completed successfully"
+            return redirect(redirect_url)
+
+        frontend_url = config("FRONTEND_URL", default="http://localhost:8080")
+        redirect_url = f"{frontend_url}/dashboard?access_token={str(access)}&refresh_token={str(refresh)}"
+        return redirect(redirect_url)
+
+        #
+        # return Response({
+        #     "message": "Login completed successfully",
+        #     "user": UserSerializer(user).data,
+        #     "tokens": {
+        #         "refresh": str(refresh),
+        #         "access": str(refresh.access_token),
+        #     }
+        # }, status=status.HTTP_201_CREATED)
