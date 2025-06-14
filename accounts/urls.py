@@ -7,6 +7,8 @@ urlpatterns = [
     path('login/', CustomTokenObtainPairView.as_view(), name="login"),
     path('logout/', LogoutView.as_view(), name="logout"),
     path('profile/', UserProfileView.as_view(), name="profile"),
+    path('profile/request-email-change/', RequestEmailChange.as_view(), name="request_email_change"),
+    path('profile/confirm-email-change/', ConfirmEmailChange.as_view(), name="confirm_email_change"),
     path('token/refresh/', CustomTokenRefreshView.as_view(), name="token_refresh"),
     path('delete/', DeleteAccountView.as_view(), name="delete_account"),
     path('password-reset/request/', ForgotPasswordView.as_view(), name='password_reset_request'),
@@ -15,5 +17,4 @@ urlpatterns = [
     path('verify-register/', VerifyRegistration.as_view(), name='verify_registration'),
     path('login/google/', GoogleLoginView.as_view(), name='google_login'),
     path('login/google/callback/', GoogleCallBackView.as_view(), name='google_callback'),
-
 ]

@@ -6,7 +6,8 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.models import Group
 from django.contrib.auth.password_validation import validate_password
-
+from accounts.service import send_email_to_verify_email
+from accounts.utils import generate_random_code
 
 class UserSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
@@ -146,3 +147,18 @@ class ResetPasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError("Passwords don't match.")
 
         return attrs
+
+class UpdateUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'email', 'phone_number', 'region']
+
+    def update(self, instance: User, validated_data: dict):
+        new_email = validated_data.get('email', None)
+        if instance.email != new_email:
+            validated_data.pop('email', None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance

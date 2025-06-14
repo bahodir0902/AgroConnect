@@ -49,7 +49,7 @@ class User(AbstractUser):
 
 
 def default_expire_date():
-    return timezone.now() + timedelta(minutes=1)
+    return timezone.now() + timedelta(minutes=5)
 
 class CodePassword(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="User")
@@ -104,11 +104,17 @@ class TemporaryUser(models.Model):
     class Meta:
         db_table = "TemporaryUser"
 
-# class TempEmailStorage(models.Model):
-#     email = models.EmailField()
-#     created_at = models.DateTimeField(auto_now_add=True)
-#
-#     def save(self, *args, **kwargs):
-#         TempEmailStorage.objects.filter(email=self.email).delete()
-#         super().save(*args, **kwargs)
+
+class EmailVerification(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    new_email = models.EmailField()
+    code = models.CharField(max_length=10)
+    expire_date = models.DateTimeField(default=default_expire_date)
+
+    class Meta:
+        db_table = 'email_verifications'
+
+    def save(self, *args, **kwargs):
+        EmailVerification.objects.filter(new_email=self.new_email).delete()
+        super().save(*args, **kwargs)
 

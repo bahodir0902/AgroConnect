@@ -4,7 +4,7 @@ from django.shortcuts import redirect
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from accounts.serializers import *
-from accounts.models import User, CodeEmail, CodePassword
+from accounts.models import User, CodeEmail, CodePassword, EmailVerification
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -12,7 +12,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from django.utils import timezone
 from accounts.utils import generate_random_code
-from accounts.service import send_email_verification, send_password_verification
+from accounts.service import send_email_verification, send_password_verification, send_email_to_verify_email
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
@@ -275,7 +275,67 @@ class UserProfileView(APIView):
 
     def get(self, request):
         serializer = UserSerializer(request.user)
+        print(serializer.data)
         return Response(serializer.data)
+
+    def put(self, request):
+        serializer = UpdateUserSerializer(instance=request.user, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+
+class RequestEmailChange(APIView):
+    def post(self, request):
+        new_email = request.data.get("new_email")
+        user_id = request.data.get("user_id")
+        user = User.objects.filter(pk=user_id).first()
+        if not user:
+            return Response({"message": f"User with {user_id} id not found"})
+        if not new_email:
+            return Response({"message": f"New email didn\'t provided."})
+        if User.objects.filter(email=new_email).exists():
+            return Response({"message": f"User with {new_email} email already exists."})
+
+        code = generate_random_code()
+        send_email_to_verify_email(new_email, user.first_name, code)
+
+        EmailVerification.objects.filter(user=user).delete()
+        EmailVerification.objects.filter(new_email=new_email).delete()
+        EmailVerification.objects.update_or_create(
+            user=user,
+            new_email=new_email,
+            code=code
+        )
+        return Response({"message": f"Successfully sent verification code to {new_email}"})
+
+
+class ConfirmEmailChange(APIView):
+    def post(self, request):
+        new_email = request.data.get("new_email")
+        code = request.data.get("code")
+        code_db = EmailVerification.objects.filter(new_email=new_email).first()
+        user = User.objects.filter(pk=code_db.user.pk).first()
+
+        if not code or not new_email:
+            return Response({"message": "new_email or code didn\'t provided"})
+
+        if not user:
+            return Response({"message": "user not found in database"})
+
+        if code_db.expire_date < timezone.now():
+            return Response({
+                "message": "Your code has expired. Request a new one."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        if str(code_db.code) != str(code):
+            return Response({
+                "message": "Incorrect code. Please enter the correct code."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        user.email = new_email
+        user.save()
+        return Response({"message": "Successfully changed to new email"})
 
 
 class CustomTokenRefreshView(TokenRefreshView):
