@@ -7,8 +7,10 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.models import Group
 from django.contrib.auth.password_validation import validate_password
 
+
 class UserSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = ['id', 'first_name', 'last_name', 'email', 'phone_number', 'date_joined', 'region', 'role']
@@ -24,6 +26,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     re_password = serializers.CharField(write_only=True, max_length=255)
     password = serializers.CharField(write_only=True, max_length=255)
     role = serializers.CharField(max_length=20)
+
     class Meta:
         model = User
         fields = ['email', 'phone_number', 'first_name', 'last_name', 'password', 're_password', 'region', 'role']
@@ -114,6 +117,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'user': UserSerializer(user).data
         }
 
+
 class ForgotPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
@@ -129,20 +133,16 @@ class VerifyPasswordResetSerializer(serializers.Serializer):
 
 
 class ResetPasswordSerializer(serializers.Serializer):
-    password = serializers.CharField(write_only=True)
-    re_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True, required=True)
+    re_new_password = serializers.CharField(write_only=True, required=True)
+    uid = serializers.CharField(write_only=True, required=True)
+    token = serializers.CharField(write_only=True, required=True)
 
     def validate(self, attrs):
-        password = attrs.get('password')
-        re_password = attrs.get('re_password')
+        password = attrs.get('new_password')
+        re_password = attrs.get('re_new_password')
 
         if password != re_password:
             raise serializers.ValidationError("Passwords don't match.")
-
-        # Validate password strength
-        try:
-            validate_password(password)
-        except serializers.ValidationError as e:
-            raise serializers.ValidationError({"password": e.messages})
 
         return attrs

@@ -13,6 +13,11 @@ from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from django.utils import timezone
 from accounts.utils import generate_random_code
 from accounts.service import send_email_verification, send_password_verification
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str
 
 
 class RegisterView(APIView):
@@ -185,9 +190,13 @@ class VerifyPasswordResetView(APIView):
                 "message": "Incorrect code. Please enter the correct code."
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+
         return Response({
             "message": "Code verified successfully. You can now reset your password.",
-            "verified": True
+            "uid": uid,
+            "token": token
         }, status=status.HTTP_200_OK)
 
 
@@ -197,32 +206,29 @@ class ResetPasswordView(APIView):
     # @method_decorator(ratelimit(key='user_or_ip', rate='6/m', block=True))
     # @method_decorator(transaction.atomic)
     def post(self, request):
-        email = request.session.get('reset_email_verified')
-        if not email:
-            return Response({
-                "message": "Email is not verified. Please complete the verification process first."
-            }, status=status.HTTP_400_BAD_REQUEST)
-
         serializer = ResetPasswordSerializer(data=request.data)
-
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+        uidb64 = serializer.validated_data.get('uid')
+        token = serializer.validated_data.get('token')
+        new_password = serializer.validated_data.get('new_password')
+
         try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            return Response({
-                "message": "User not found."
-            }, status=status.HTTP_404_NOT_FOUND)
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            return Response({"message": "Invalid user."}, status=status.HTTP_400_BAD_REQUEST)
 
-        password = serializer.validated_data['password']
-        user.set_password(password)
+        if not default_token_generator.check_token(user, token):
+            return Response({"message": "Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
         user.save()
-
         CodePassword.objects.filter(user=user).delete()
 
         return Response({
-            "message": "Password has been reset successfully. You can now login with your new password."
+            "message": "Password has been reset successfully."
         }, status=status.HTTP_200_OK)
 
 
@@ -231,7 +237,6 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-
         try:
             serializer.is_valid(raise_exception=True)
         except TokenError as e:
@@ -292,6 +297,7 @@ class DeleteAccountView(APIView):
 
 class GoogleLoginView(APIView):
     permission_classes = [AllowAny]
+
     # @method_decorator(ratelimit(key='user_or_ip', rate='10/m', block=True))
     def get(self, request):
         auth_url = (
@@ -307,6 +313,7 @@ class GoogleLoginView(APIView):
 
 class GoogleCallBackView(APIView):
     permission_classes = [AllowAny]
+
     # @method_decorator(transaction.atomic)
     def get(self, request):
         code = request.GET.get('code')
