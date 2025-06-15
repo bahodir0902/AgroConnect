@@ -17,4 +17,5 @@ urlpatterns = [
     path('verify-register/', VerifyRegistration.as_view(), name='verify_registration'),
     path('login/google/', GoogleLoginView.as_view(), name='google_login'),
     path('login/google/callback/', GoogleCallBackView.as_view(), name='google_callback'),
+    path('login/google/complete-profile/', CompleteGoogleRegistration.as_view(), name='complete_google_registration'),
 ]

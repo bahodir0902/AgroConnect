@@ -14,10 +14,8 @@ from django.utils import timezone
 from accounts.utils import generate_random_code
 from accounts.service import send_email_verification, send_password_verification, send_email_to_verify_email
 from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_encode
-from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_decode
-from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
 
 
 class RegisterView(APIView):
@@ -424,10 +422,43 @@ class GoogleCallBackView(APIView):
             return redirect(redirect_url)
 
         frontend_url = config("FRONTEND_URL", default="http://localhost:8080")
-        redirect_url = f"{frontend_url}/dashboard?access_token={str(access)}&refresh_token={str(refresh)}"
+        redirect_url = f"{frontend_url}/oauth/google/callback?access_token={access}&refresh_token={refresh}&email={email}"
         return redirect(redirect_url)
 
-        #
+
+class CompleteGoogleRegistration(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        print(request.data)
+        role = request.data.get("role")
+        region = request.data.get("region")
+        phone_number = request.data.get("phone_number")
+        email = request.data.get("email")
+        user = User.objects.filter(email=email).first()
+
+        if not user:
+            return Response(f"User with {email} email not found.", status=status.HTTP_404_NOT_FOUND)
+        if User.objects.filter(phone_number=phone_number).exists():
+            return Response({"message": f"User with {phone_number} phone number already exists."})
+
+        user.region = region
+        user.phone_number = phone_number
+        if role and role == 'Farmers':
+            user_group, _ = Group.objects.get_or_create(name='Farmers')
+        elif role and role == 'Exporters':
+            user_group, _ = Group.objects.get_or_create(name='Exporters')
+        elif role and role == 'Analysts':
+            user_group, _ = Group.objects.get_or_create(name='Analysts')
+        else:
+            user_group, _ = Group.objects.get_or_create(name="Users")
+        user.groups.clear()
+        user.groups.add(user_group)
+        user.save()
+        return Response({"message": "User profile updated successfully",
+                         "role": role,
+                         "region": region})
+
         # return Response({
         #     "message": "Login completed successfully",
         #     "user": UserSerializer(user).data,
