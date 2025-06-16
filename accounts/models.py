@@ -21,6 +21,7 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault("is_superuser", True)
         return self.create_user(email, password, **extra_fields)
 
+
 class User(AbstractUser):
     username = None
     email = models.EmailField(unique=True, max_length=255)
@@ -38,7 +39,6 @@ class User(AbstractUser):
     region = models.CharField(max_length=255, null=True, blank=True)
     google_id = models.CharField(max_length=50, unique=True, null=True, blank=True)
 
-
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name']
 
@@ -50,6 +50,7 @@ class User(AbstractUser):
 
 def default_expire_date():
     return timezone.now() + timedelta(minutes=5)
+
 
 class CodePassword(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="User")
@@ -68,6 +69,7 @@ class CodePassword(models.Model):
 
     def __str__(self):
         return f"Code: {self.code} for {self.user.email} (Expires: {self.expire_date})"
+
 
 class CodeEmail(models.Model):
     code = models.CharField(max_length=10)
@@ -118,3 +120,32 @@ class EmailVerification(models.Model):
         EmailVerification.objects.filter(new_email=self.new_email).delete()
         super().save(*args, **kwargs)
 
+
+class RecentActivity(models.Model):
+    ACTION_CHOICES = [
+        ('CREATE', 'Created'),
+        ('UPDATE', 'Updated'),
+        ('DELETE', 'Deleted'),
+    ]
+
+    MODEL_CHOICES = [
+        ('Product', 'Product'),
+        ('PlantedProduct', 'Planted Product'),
+        ('Region', 'Region'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recent_activities")
+    action = models.CharField(max_length=10, choices=ACTION_CHOICES)
+    model_name = models.CharField(max_length=50, choices=MODEL_CHOICES)
+    object_id = models.PositiveIntegerField()
+    object_name = models.CharField(max_length=255)  # Store the string representation
+    timestamp = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = 'Recent Activities'
+        ordering = ['-timestamp']
+        verbose_name = 'Recent Activity'
+        verbose_name_plural = 'Recent Activities'
+
+    def __str__(self):
+        return f"{self.user.email} {self.get_action_display().lower()} {self.model_name}: {self.object_name}"

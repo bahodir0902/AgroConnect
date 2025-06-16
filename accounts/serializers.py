@@ -1,7 +1,8 @@
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from django.utils import timezone
 from rest_framework import serializers
-from accounts.models import User, TemporaryUser
+from accounts.models import User, RecentActivity
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.models import Group
@@ -159,3 +160,36 @@ class UpdateUserSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
+
+
+class RecentActivitySerializer(serializers.ModelSerializer):
+    action_display = serializers.CharField(source='get_action_display', read_only=True)
+    time_ago = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RecentActivity
+        fields = [
+            'id',
+            'action',
+            'action_display',
+            'model_name',
+            'object_name',
+            'timestamp',
+            'time_ago'
+        ]
+
+    def get_time_ago(self, obj):
+        """Return human-readable time difference"""
+        now = timezone.now()
+        diff = now - obj.timestamp
+
+        if diff.days > 0:
+            return f"{diff.days} day{'s' if diff.days > 1 else ''} ago"
+        elif diff.seconds > 3600:
+            hours = diff.seconds // 3600
+            return f"{hours} hour{'s' if hours > 1 else ''} ago"
+        elif diff.seconds > 60:
+            minutes = diff.seconds // 60
+            return f"{minutes} minute{'s' if minutes > 1 else ''} ago"
+        else:
+            return "Just now"

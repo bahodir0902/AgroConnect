@@ -1,12 +1,13 @@
 import requests
 from decouple import config
+from django.core.paginator import Paginator
 from django.db import transaction
 from django.shortcuts import redirect
 from django.utils.decorators import method_decorator
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from accounts.serializers import *
-from accounts.models import User, CodeEmail, CodePassword, EmailVerification
+from accounts.models import User, CodeEmail, CodePassword, EmailVerification, RecentActivity, TemporaryUser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -462,4 +463,36 @@ class CompleteGoogleRegistration(APIView):
         return Response({"message": "User profile updated successfully",
                          "role": role,
                          "region": region})
+
+
+class RecentActivities(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        """Get user's recent activities with pagination"""
+        activities = RecentActivity.objects.filter(user=request.user)
+
+        page_size = request.GET.get('page_size', 20)
+        page = request.GET.get('page', 1)
+
+        try:
+            paginator = Paginator(activities, page_size)
+            activities_page = paginator.page(page)
+        except:
+            activities_page = activities[:20]
+
+        serializer = RecentActivitySerializer(activities_page, many=True)
+
+        return Response({
+            'activities': serializer.data,
+            'total_count': activities.count()
+        })
+
+    # def post(self, request):
+    #     """Manually log an activity (optional - mainly for testing)"""
+    #     print(request.data)
+    #     serializer = RecentActivitySerializer(data=request.data)
+    #     if serializer.is_valid():
+    #         serializer.save(user=request.user)
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

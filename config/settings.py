@@ -71,21 +71,18 @@ CORS_ALLOWED_ORIGINS = [
     'http://34.34.87.78:9000',
     "https://agroconnect.com.uz",
     "https://www.agroconnect.com.uz",
-    "http://agroconnect.com.uz:90"
 ]
 
 CORS_ORIGIN_WHITELIST = [
     'http://34.34.87.78:9000',
     "https://agroconnect.com.uz",
     "https://www.agroconnect.com.uz",
-    "http://agroconnect.com.uz:90"
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     'http://34.34.87.78:9000',
     "https://agroconnect.com.uz",
     "https://www.agroconnect.com.uz",
-    "http://agroconnect.com.uz:90"
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True

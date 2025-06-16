@@ -18,4 +18,5 @@ urlpatterns = [
     path('login/google/', GoogleLoginView.as_view(), name='google_login'),
     path('login/google/callback/', GoogleCallBackView.as_view(), name='google_callback'),
     path('login/google/complete-profile/', CompleteGoogleRegistration.as_view(), name='complete_google_registration'),
+    path('recent-activities/', RecentActivities.as_view(), name="recent_activities"),
 ]
