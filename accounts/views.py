@@ -1,6 +1,8 @@
 import requests
 from decouple import config
+from django.db import transaction
 from django.shortcuts import redirect
+from django.utils.decorators import method_decorator
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from accounts.serializers import *
@@ -16,11 +18,12 @@ from accounts.service import send_email_verification, send_password_verification
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
-
+from django_ratelimit.decorators import ratelimit
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
-
+    @method_decorator(ratelimit(key='user_or_ip', rate='30/m', block=True))
+    @method_decorator(transaction.atomic)
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         re_password = request.data.get("re_password", None)
@@ -52,7 +55,8 @@ class RegisterView(APIView):
 
 class VerifyRegistration(APIView):
     permission_classes = [AllowAny]
-
+    @method_decorator(ratelimit(key='user_or_ip', rate='6/m', block=True))
+    @method_decorator(transaction.atomic)
     def post(self, request):
         email = request.data.get('email')
         pending_user_data = TemporaryUser.objects.filter(email=email).values().first()
@@ -120,9 +124,8 @@ class VerifyRegistration(APIView):
 
 class ForgotPasswordView(APIView):
     permission_classes = [AllowAny]
-
-    # @method_decorator(ratelimit(key='user_or_ip', rate='6/m', block=True))
-    # @method_decorator(transaction.atomic)
+    @method_decorator(ratelimit(key='user_or_ip', rate='6/m', block=True))
+    @method_decorator(transaction.atomic)
     def post(self, request):
         serializer = ForgotPasswordSerializer(data=request.data)
 
@@ -148,8 +151,8 @@ class ForgotPasswordView(APIView):
 
 class VerifyPasswordResetView(APIView):
     permission_classes = [AllowAny]
-
-    # @method_decorator(ratelimit(key='user_or_ip', rate='6/m', block=True))
+    @method_decorator(ratelimit(key='user_or_ip', rate='6/m', block=True))
+    @method_decorator(transaction.atomic)
     def post(self, request):
         serializer = VerifyPasswordResetSerializer(data=request.data)
 
@@ -200,9 +203,8 @@ class VerifyPasswordResetView(APIView):
 
 class ResetPasswordView(APIView):
     permission_classes = [AllowAny]
-
-    # @method_decorator(ratelimit(key='user_or_ip', rate='6/m', block=True))
-    # @method_decorator(transaction.atomic)
+    @method_decorator(ratelimit(key='user_or_ip', rate='6/m', block=True))
+    @method_decorator(transaction.atomic)
     def post(self, request):
         serializer = ResetPasswordSerializer(data=request.data)
         if not serializer.is_valid():
@@ -232,7 +234,8 @@ class ResetPasswordView(APIView):
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
-
+    @method_decorator(ratelimit(key='user_or_ip', rate='30/m', block=True))
+    @method_decorator(transaction.atomic)
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         try:
@@ -253,9 +256,8 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
-
+    @method_decorator(transaction.atomic)
     def post(self, request):
-        print(request.data)
         try:
             refresh_token = request.data.get("refresh_token")
             if refresh_token:
@@ -270,20 +272,22 @@ class LogoutView(APIView):
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
-
     def get(self, request):
         serializer = UserSerializer(request.user)
-        print(serializer.data)
         return Response(serializer.data)
 
+    @method_decorator(ratelimit(key='user_or_ip', rate='6/m', block=True))
+    @method_decorator(transaction.atomic)
     def put(self, request):
         serializer = UpdateUserSerializer(instance=request.user, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class RequestEmailChange(APIView):
+    @method_decorator(ratelimit(key='user_or_ip', rate='10/m', block=True))
+    @method_decorator(transaction.atomic)
     def post(self, request):
         new_email = request.data.get("new_email")
         user_id = request.data.get("user_id")
@@ -309,6 +313,8 @@ class RequestEmailChange(APIView):
 
 
 class ConfirmEmailChange(APIView):
+    @method_decorator(ratelimit(key='user_or_ip', rate='10/m', block=True))
+    @method_decorator(transaction.atomic)
     def post(self, request):
         new_email = request.data.get("new_email")
         code = request.data.get("code")
@@ -345,8 +351,8 @@ class CustomTokenRefreshView(TokenRefreshView):
 
 
 class DeleteAccountView(APIView):
-    permission_classes = [IsAuthenticated]
-
+    @method_decorator(ratelimit(key='user_or_ip', rate='6/m', block=True))
+    @method_decorator(transaction.atomic)
     def delete(self, request):
         user = request.user
         user.delete()
@@ -355,8 +361,7 @@ class DeleteAccountView(APIView):
 
 class GoogleLoginView(APIView):
     permission_classes = [AllowAny]
-
-    # @method_decorator(ratelimit(key='user_or_ip', rate='10/m', block=True))
+    @method_decorator(ratelimit(key='user_or_ip', rate='10/m', block=True))
     def get(self, request):
         auth_url = (
             f"{config("GOOGLE_AUTH_URL")}"
@@ -371,8 +376,7 @@ class GoogleLoginView(APIView):
 
 class GoogleCallBackView(APIView):
     permission_classes = [AllowAny]
-
-    # @method_decorator(transaction.atomic)
+    @method_decorator(transaction.atomic)
     def get(self, request):
         code = request.GET.get('code')
         token_data = {
@@ -428,9 +432,9 @@ class GoogleCallBackView(APIView):
 
 class CompleteGoogleRegistration(APIView):
     permission_classes = [AllowAny]
-
+    @method_decorator(ratelimit(key='user_or_ip', rate='6/m', block=True))
+    @method_decorator(transaction.atomic)
     def post(self, request):
-        print(request.data)
         role = request.data.get("role")
         region = request.data.get("region")
         phone_number = request.data.get("phone_number")
@@ -459,11 +463,3 @@ class CompleteGoogleRegistration(APIView):
                          "role": role,
                          "region": region})
 
-        # return Response({
-        #     "message": "Login completed successfully",
-        #     "user": UserSerializer(user).data,
-        #     "tokens": {
-        #         "refresh": str(refresh),
-        #         "access": str(refresh.access_token),
-        #     }
-        # }, status=status.HTTP_201_CREATED)

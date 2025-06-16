@@ -5,9 +5,6 @@ from accounts.models import User, TemporaryUser
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.models import Group
-from django.contrib.auth.password_validation import validate_password
-from accounts.service import send_email_to_verify_email
-from accounts.utils import generate_random_code
 
 class UserSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()

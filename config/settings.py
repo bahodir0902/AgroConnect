@@ -42,6 +42,9 @@ INSTALLED_APPS = [
 
     # local
     'accounts',
+    'products',
+    'regions',
+    'common',
 
     # 3rd party
     'corsheaders',
@@ -49,7 +52,8 @@ INSTALLED_APPS = [
     'drf_yasg',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-    'django_celery_beat'
+    'django_celery_beat',
+    'django_ratelimit',
 ]
 
 MIDDLEWARE = [
@@ -63,13 +67,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ALLOWED_ORIGINS = ['http://34.34.87.78:9000']
-CORS_ORIGIN_WHITELIST = ['http://34.34.87.78:9000']
-CSRF_TRUSTED_ORIGINS = ['http://34.34.87.78:9000']
+CORS_ALLOWED_ORIGINS = ['http://34.34.87.78:9000', "agroconnect.com.uz", "www.agroconnect.com.uz", "http://agroconnect.com.uz:90"]
+CORS_ORIGIN_WHITELIST = ['http://34.34.87.78:9000', "agroconnect.com.uz", "www.agroconnect.com.uz", "http://agroconnect.com.uz:90"]
+CSRF_TRUSTED_ORIGINS = ['http://34.34.87.78:9000', "agroconnect.com.uz", "www.agroconnect.com.uz", "http://agroconnect.com.uz:90"]
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
-
 
 ROOT_URLCONF = 'config.urls'
 
@@ -202,9 +205,19 @@ GOOGLE_AUTH_URL = config('GOOGLE_AUTH_URL')
 GOOGLE_TOKEN_URL = config('GOOGLE_TOKEN_URL')
 GOOGLE_USER_INFO_URL = config('GOOGLE_USER_INFO_URL')
 
-CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
-CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
+CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/1'
+CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/1"
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 1800
 CELERY_TIMEZONE = config("TIMEZONE", default="UTC")
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers.DatabaseScheduler"
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
