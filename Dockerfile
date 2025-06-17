@@ -11,4 +11,9 @@ COPY . /app
 
 EXPOSE 8001
 
-CMD ["sh", "-c", "python3 manage.py migrate --noinput && python3 manage.py collectstatic --noinput && python3 manage.py runserver 0.0.0.0:8001"]
+CMD ["sh", "-c", "\
+    python3 manage.py migrate --noinput && \
+    python3 manage.py collectstatic --noinput && \
+    python3 manage.py add_regions && \
+    python3 manage.py add_products && \
+    python3 manage.py runserver 0.0.0.0:8001"]
