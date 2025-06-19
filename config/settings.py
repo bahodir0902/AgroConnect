@@ -85,7 +85,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://www.agroconnect.com.uz",
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'config.urls'

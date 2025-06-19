@@ -1,3 +1,5 @@
+from datetime import timedelta
+from django.utils import timezone
 from accounts.utils import log_activity
 from products.models import Product, PlantedProduct
 from products.serializers import ProductSerializer, PlantedProductSerializer
@@ -8,7 +10,7 @@ from rest_framework import status
 from accounts.permissions import IsAdminUser
 from products.pagination import ProductPageNumberPagination
 from rest_framework.views import APIView
-from django.db.models import Sum, F
+from django.db.models import Sum, F, Max
 from decimal import Decimal
 from collections import defaultdict
 from regions.models import Region
@@ -49,8 +51,10 @@ class PlantedProductModelViewSet(ModelViewSet):
         log_activity(instance.owner, "DELETE", instance)
         instance.delete()
 
+
 class WPHPerRegion(APIView):
     """Calculate Weight Per Hectare for a specific region or all regions"""
+    permission_classes = [AllowAny]
 
     def get(self, request):
         region_id = request.query_params.get("region_id")
@@ -95,6 +99,7 @@ class WPHPerRegion(APIView):
 
 class WPHPerRegionPerProduct(APIView):
     """Calculate Weight Per Hectare grouped by product for a specific region"""
+    permission_classes = [AllowAny]
 
     def get(self, request):
         region_id = request.query_params.get("region_id")
@@ -167,6 +172,7 @@ class WPHPerRegionPerProduct(APIView):
 
 class WPHComparison(APIView):
     """Compare WPH across different regions for all products or specific product"""
+    permission_classes = [AllowAny]
 
     def get(self, request):
         product_id = request.query_params.get("product_id")
@@ -226,6 +232,7 @@ class WPHComparison(APIView):
 
 class WPHMatrix(APIView):
     """Get a matrix of WPH values: regions vs products"""
+    permission_classes = [AllowAny]
 
     def get(self, request):
         queryset = PlantedProduct.objects.select_related('product', 'region')
@@ -277,3 +284,42 @@ class WPHMatrix(APIView):
         result.sort(key=lambda x: x['avg_wph'], reverse=True)
 
         return Response({"matrix": result}, status=status.HTTP_200_OK)
+
+
+class TotalProductionThisMonth(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        planted_products = PlantedProduct.objects.filter(created_at__gt=timezone.now() - timedelta(days=30))
+        total_weight = planted_products.aggregate(total_weight=Sum('planting_area'))['total_weight']
+        return Response({"total_weight": total_weight}, status=status.HTTP_200_OK)
+
+
+class HighestWPH(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        planted_products = PlantedProduct.objects.values('expecting_weight', 'planting_area')
+        wph = planted_products.annotate(wph=F("expecting_weight") / F("planting_area"))
+        max_whp = wph.order_by('-wph')[0]['wph']
+        return Response({"whp": max_whp}, status=status.HTTP_200_OK)
+
+
+class TopPerformingRegion(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        top_region = PlantedProduct.objects.values('region__name').annotate(
+            total_production=Sum('expecting_weight')
+        ).order_by('-total_production').first()
+
+        if top_region:
+            return Response({
+                "region": top_region['region__name'],
+                "total_production": top_region['total_production']
+            })
+        else:
+            return Response({
+                "region": "No data",
+                "total_production": 0
+            })
