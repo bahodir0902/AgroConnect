@@ -68,18 +68,21 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8080",  # 👈 and this
     'http://34.34.87.78:9000',
     "https://agroconnect.com.uz",
     "https://www.agroconnect.com.uz",
 ]
 
 CORS_ORIGIN_WHITELIST = [
+    "http://localhost:8080",  # 👈 add this
     'http://34.34.87.78:9000',
     "https://agroconnect.com.uz",
     "https://www.agroconnect.com.uz",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:8080",  # 👈 and this
     'http://34.34.87.78:9000',
     "https://agroconnect.com.uz",
     "https://www.agroconnect.com.uz",
