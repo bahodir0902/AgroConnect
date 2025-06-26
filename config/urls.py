@@ -39,5 +39,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('regions/', include('regions.urls')),
-    path("products/", include("products.urls"))
+    path("products/", include("products.urls")),
+    path('farmers/', include('farmers.urls')),
 ]

@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'products',
     'regions',
     'common',
+    'farmers',
 
     # 3rd party
     'corsheaders',
