@@ -34,11 +34,11 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name="schema-json"),
-    path("swagger/", schema_view.with_ui('swagger', cache_timeout=0), name="schema-swagger-ui"),
-    path('admin/', admin.site.urls),
-    path('accounts/', include('accounts.urls')),
-    path('regions/', include('regions.urls')),
-    path("products/", include("products.urls")),
-    path('farmers/', include('farmers.urls')),
+    path('api/swagger<format>/', schema_view.without_ui(cache_timeout=0), name="schema-json"),
+    path("api/swagger/", schema_view.with_ui('swagger', cache_timeout=0), name="schema-swagger-ui"),
+    path('api/admin/', admin.site.urls),
+    path('api/accounts/', include('accounts.urls')),
+    path('api/regions/', include('regions.urls')),
+    path("api/products/", include("products.urls")),
+    path('api/farmers/', include('farmers.urls')),
 ]
