@@ -7,37 +7,37 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         products = [
-            # Fruits
-            "Apple", "Orange", "Banana", "Grape", "Strawberry", "Blueberry", "Raspberry", "Blackberry",
-            "Peach", "Pear", "Plum", "Cherry", "Apricot", "Mango", "Pineapple", "Watermelon",
-            "Cantaloupe", "Honeydew", "Kiwi", "Papaya", "Avocado", "Coconut", "Pomegranate", "Fig",
-            "Date", "Cranberry", "Gooseberry", "Elderberry", "Currant", "Lemon", "Lime", "Grapefruit",
+            # Fruits - Mevalar
+            "Olma", "Apelsin", "Banan", "Uzum", "Qulupnay", "Ko'k rezavor", "Qizil rezavor", "Qora rezavor",
+            "Shaftoli", "Nok", "Olxo'ri", "Olcha", "O'rik", "Mango", "Ananas", "Tarvuz",
+            "Qovun", "Asal qovuni", "Kivi", "Papaya", "Avokado", "Hindiston yong'og'i", "Anor", "Anjir",
+            "Xurmo", "Kızılcık", "Chuqur rezavor", "Rovashan", "Smorodina", "Limon", "Laym", "Greypfrut",
 
-            # Vegetables
-            "Potato", "Tomato", "Carrot", "Onion", "Garlic", "Broccoli", "Cauliflower", "Cabbage",
-            "Lettuce", "Spinach", "Kale", "Cucumber", "Zucchini", "Squash", "Pumpkin", "Bell Pepper",
-            "Hot Pepper", "Eggplant", "Radish", "Turnip", "Beet", "Sweet Potato", "Corn", "Green Bean",
-            "Pea", "Lima Bean", "Okra", "Asparagus", "Artichoke", "Brussels Sprout", "Celery", "Parsnip",
+            # Vegetables - Sabzavotlar
+            "Kartoshka", "Pomidor", "Sabzi", "Piyoz", "Sarimsoq", "Brokkoli", "Gulkaram", "Karam",
+            "Salat bargi", "Ismaloq", "Karam bargi", "Bodring", "Qovoq", "Qovoq", "Oshqovoq", "Bulgari qalampiri",
+            "Achchiq qalampir", "Baqlajon", "Turp", "Sholg'om", "Lavlagi", "Shirin kartoshka", "Makkajo'xori", "Yashil loviya",
+            "No'xat", "Lima loviyasi", "Bamiya", "Qushqo'nmasi", "Artishok", "Brussel karami", "Kraxmal", "Parsnip",
 
-            # Grains & Cereals
-            "Wheat", "Rice", "Corn", "Barley", "Oats", "Rye", "Quinoa", "Buckwheat", "Millet", "Sorghum",
+            # Grains & Cereals - Don va donli ekinlar
+            "Bug'doy", "Guruch", "Makkajo'xori", "Arpa", "Jo", "Javdar", "Kinoa", "Qora bug'doy", "Tariq", "Sorghum",
 
-            # Legumes
-            "Soybean", "Black Bean", "Kidney Bean", "Navy Bean", "Pinto Bean", "Chickpea", "Lentil", "Black-eyed Pea",
+            # Legumes - Dukkakli o'simliklar
+            "Soya loviyasi", "Qora loviya", "Buyrak loviyasi", "Oq loviya", "Pinto loviyasi", "No'xat", "Yasmiq", "Qora ko'zli no'xat",
 
-            # Nuts & Seeds
-            "Almond", "Walnut", "Pecan", "Hazelnut", "Cashew", "Pistachio", "Macadamia", "Sunflower Seed",
-            "Pumpkin Seed", "Flax Seed", "Chia Seed", "Sesame Seed",
+            # Nuts & Seeds - Yong'oq va urug'lar
+            "Bodom", "Yong'oq", "Pekan", "Findiq", "Kaju", "Pista", "Makademiya", "Kungaboqar urgi",
+            "Qovoq urgi", "Zig'ir urgi", "Chia urgi", "Kunjut urgi",
 
-            # Herbs & Spices
-            "Basil", "Oregano", "Thyme", "Rosemary", "Sage", "Parsley", "Cilantro", "Dill",
-            "Mint", "Chives", "Tarragon", "Lavender",
+            # Herbs & Spices - O'tlar va ziravorlar
+            "Reyhan", "Oregano", "Kekik", "Rozmarin", "Adaçayı", "Jafari", "Kashnich", "Archa",
+            "Yalpiz", "Piyozcha", "Tarhun", "Lavanda",
 
-            # Root Vegetables
-            "Ginger", "Turmeric", "Horseradish", "Rutabaga", "Jicama", "Yam",
+            # Root Vegetables - Ildiz sabzavotlar
+            "Zanjabil", "Zerdeçal", "Xantal", "Rutabaga", "Jikama", "Qand kartoshkasi",
 
-            # Specialty Crops
-            "Cotton", "Tobacco", "Sugar Beet", "Sugar Cane", "Tea Leaf", "Coffee Bean", "Vanilla Bean", "Hops"
+            # Specialty Crops - Maxsus ekinlar
+            "Paxta", "Tamaki", "Qand lavlagi", "Qand qamishi", "Choy bargi", "Qahva loviyasi", "Vanil loviyasi", "Hop"
         ]
 
         created_count = 0
