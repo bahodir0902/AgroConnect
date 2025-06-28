@@ -25,6 +25,6 @@ class PlantedProduct(BaseModel):
 
     class Meta:
         db_table = "Planted Products"
-    #
-    # def __str__(self):
-    #     return f"Product name: {self.product.name}, Product owner: {self.owner.first_name}, Region: {self.region.name}"
+
+    def __str__(self):
+        return f"Product name: {self.product.name}, Product owner: {self.owner.first_name}, Region: {self.region.name}"
