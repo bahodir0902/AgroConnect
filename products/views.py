@@ -2,7 +2,7 @@ from datetime import timedelta
 from django.utils import timezone
 from accounts.utils import log_activity
 from products.models import Product, PlantedProduct
-from products.serializers import ProductSerializer, PlantedProductSerializer
+from products.serializers import ProductSerializer, PlantedProductSerializer, PlantedProductSerializerListAndRetrieve
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -38,6 +38,11 @@ class PlantedProductModelViewSet(ModelViewSet):
         if self.action in ['retrieve', 'list']:
             return queryset.filter(owner=self.request.user.pk)
         return queryset
+
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return PlantedProductSerializerListAndRetrieve
+        return self.serializer_class
 
     def perform_create(self, serializer):
         instance = serializer.save(owner=self.request.user)
