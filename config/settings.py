@@ -223,12 +223,52 @@ GOOGLE_AUTH_URL = config('GOOGLE_AUTH_URL')
 GOOGLE_TOKEN_URL = config('GOOGLE_TOKEN_URL')
 GOOGLE_USER_INFO_URL = config('GOOGLE_USER_INFO_URL')
 
+# Add these Celery settings to your existing settings.py
+# Replace your existing Celery configuration with this:
+
+# Celery Configuration
 CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/1'
 CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/1"
+
+# Task serialization
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['json']
+
+# Timezone
+CELERY_TIMEZONE = config("TIMEZONE", default="UTC")
+CELERY_ENABLE_UTC = True
+
+# Task execution settings
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 1800
-CELERY_TIMEZONE = config("TIMEZONE", default="UTC")
+CELERY_TASK_SOFT_TIME_LIMIT = 1200
+
+# Worker settings
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_TASK_ACKS_LATE = True
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 1000
+
+# Queue configuration - Use default queue for all tasks
+CELERY_TASK_DEFAULT_QUEUE = 'celery'
+CELERY_TASK_CREATE_MISSING_QUEUES = True
+
+# Remove or comment out the CELERY_TASK_ROUTES to use default queue
+# CELERY_TASK_ROUTES = {
+#     'accounts.service.send_email_verification_task': {'queue': 'email'},
+#     'accounts.service.send_password_verification_task': {'queue': 'email'},
+#     'accounts.service.send_email_change_verification_task': {'queue': 'email'},
+# }
+
+# Beat scheduler (if you're using periodic tasks)
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers.DatabaseScheduler"
+
+# Error handling
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+
+# Logging
+CELERY_WORKER_HIJACK_ROOT_LOGGER = False
+CELERY_WORKER_LOG_COLOR = True
 
 CACHES = {
     "default": {
